@@ -1,0 +1,23 @@
+url = "https://discord.com/api/v8/applications/787384048979935253/guilds/786473829190860800/commands"
+json = {
+    "name": "list",
+    "description": "View people on the modded server"
+}
+headers = {
+    "Authorization": f"Bot {os.getenv('TOKEN')}"
+}
+
+
+
+{
+        "name": "send",
+        "description": "Send a command to the server",
+        "options": [
+            {
+                "name": "command",
+                "description": "Command to send to the server",
+                "type": 3,
+                "required": True
+            }
+        ]
+    }

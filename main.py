@@ -1,18 +1,24 @@
+import logging
 import os
 import sys
 import traceback
-from typing import List
+from typing import List, Optional
 
 import discord
 import dotenv
 import mcstatus
+from aiohttp import ClientSession
 from discord.ext import commands
+import aiohttp
+from discord_slash import SlashCommand, SlashContext
 
 from checks import in_whitelist, InWhitelistCheckFailure
 from rcon import minecraft
 
 bot_bot = commands.Bot(command_prefix="$", help_command=None)
 dotenv.load_dotenv()
+slash = SlashCommand(bot_bot)
+logging.basicConfig(level=logging.INFO)
 
 IP = os.getenv("IP")
 PORT = os.getenv("PORT")
@@ -20,12 +26,35 @@ SERVER_PORT = os.getenv("SERVER_PORT")
 RCON = os.getenv("RCON")
 server = minecraft.Server(IP, PORT, RCON, connect_on_send=True)
 mod_commands = os.getenv("MOD_COMMANDS").split(",")
-
+GUILD: Optional[discord.Guild] = None
 
 @bot_bot.event
 async def on_ready():
+    global GUILD
     await server.connect()
     print("Bot Bot ready!")
+    GUILD = bot_bot.get_guild(786473829190860800)
+
+
+
+@slash.slash(name="list")
+async def _list(ctx: SlashContext):
+    await ctx.send(content=f"<@{ctx.author}>\n"
+                           f"```{(await server.send('list'))[:1500]}```")
+
+@slash.slash(name="send")
+async def _send(ctx: SlashContext, command: str):
+    author = GUILD.get_member(ctx.author)
+    if not author:
+        return
+    if int(os.getenv("MOD")) not in [r.id for r in author.roles]:
+        return
+    for cmd in mod_commands:
+        if command.startswith(f"{cmd} ") or command == cmd:
+            return await ctx.send(content=f"```{(await server.send(command))[:1500]}```")
+    if author.id not in [569362627935862784]:
+        await ctx.send(content="Allowed commands for moderators: " + ", ".join(mod_commands))
+    await ctx.send(content="```{(await server.send(command))[:1500]}```")
 
 
 @bot_bot.command()
