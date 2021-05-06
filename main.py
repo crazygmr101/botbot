@@ -1,104 +1,95 @@
+import io
 import logging
 import os
+import random
 import sys
 import traceback
 from typing import List, Optional
 
+import aiohttp
 import discord
 import dotenv
-import mcstatus
-from aiohttp import ClientSession
 from discord.ext import commands
-import aiohttp
 from discord_slash import SlashCommand, SlashContext
 
-from checks import in_whitelist, InWhitelistCheckFailure
-from rcon import minecraft
+from checks import InWhitelistCheckFailure
 
 bot_bot = commands.Bot(command_prefix="$", help_command=None)
 dotenv.load_dotenv()
-slash = SlashCommand(bot_bot)
+slash = SlashCommand(bot_bot, sync_commands=True)
 logging.basicConfig(level=logging.INFO)
-
-IP = os.getenv("IP")
-PORT = os.getenv("PORT")
-SERVER_PORT = os.getenv("SERVER_PORT")
-RCON = os.getenv("RCON")
-server = minecraft.Server(IP, PORT, RCON, connect_on_send=True)
 mod_commands = os.getenv("MOD_COMMANDS").split(",")
 GUILD: Optional[discord.Guild] = None
+GUILD_ID: int = 786473829190860800
+API_URL = "http://discord.com/api/v8"
+
 
 @bot_bot.event
 async def on_ready():
     global GUILD
-    await server.connect()
     print("Bot Bot ready!")
-    GUILD = bot_bot.get_guild(786473829190860800)
+    GUILD = bot_bot.get_guild(GUILD_ID)
 
 
-
-@slash.slash(name="list")
-async def _list(ctx: SlashContext):
-    await ctx.send(content=f"<@{ctx.author}>\n"
-                           f"```{(await server.send('list'))[:1500]}```")
-
-@slash.slash(name="send")
-async def _send(ctx: SlashContext, command: str):
-    author = GUILD.get_member(ctx.author)
-    if not author:
-        return
-    if int(os.getenv("MOD")) not in [r.id for r in author.roles]:
-        return
-    for cmd in mod_commands:
-        if command.startswith(f"{cmd} ") or command == cmd:
-            return await ctx.send(content=f"```{(await server.send(command))[:1500]}```")
-    if author.id not in [569362627935862784]:
-        await ctx.send(content="Allowed commands for moderators: " + ", ".join(mod_commands))
-    await ctx.send(content="```{(await server.send(command))[:1500]}```")
+@slash.slash(guild_ids=[GUILD_ID])
+async def bonk(ctx: SlashContext):
+    await ctx.send(content="Bonk!", hidden=True)
 
 
-@bot_bot.command()
-async def send(ctx: commands.Context, *, command: str):
-    if int(os.getenv("MOD")) not in [r.id for r in ctx.author.roles]:
-        return
-    for cmd in mod_commands:
-        if command.startswith(f"{cmd} ") or command == cmd:
-            return await ctx.send(f"```{(await server.send(command))[:1500]}```")
-    if ctx.author.id not in [569362627935862784]:
-        await ctx.send("Allowed commands for moderators: " + ", ".join(mod_commands))
-    await ctx.send(f"```{(await server.send(command))[:1500]}```")
+@slash.slash(guild_ids=[GUILD_ID])
+async def hug(ctx: SlashContext, user: discord.User):
+    hugs = [
+        "{author} hugged {user}!",
+        "{user} got a hug from {author} :)"
+    ]
+    async with aiohttp.ClientSession() as sess:
+        async with sess.get("https://nekos.life/api/v2/img/hug") as resp:
+            buf = io.BytesIO()
+            url = (await resp.json())["url"]
+            async with sess.get(url) as image:
+                buf.write(await image.read())
+                buf.seek(0)
+            await ctx.send(
+                content=random.choice(hugs)
+                    .format(user=user.mention, author=ctx.author.mention),  # noqa
+                file=discord.File(buf, filename=url.split("/")[-1])
+            )
+
+@slash.slash(guild_ids=[GUILD_ID])
+async def slap(ctx: SlashContext, user: discord.User):
+    slaps = [
+        "{author} slapped {user}!",
+        "{user} got slapped by {author}..ow"
+    ]
+    async with aiohttp.ClientSession() as sess:
+        async with sess.get("https://nekos.life/api/v2/img/slap") as resp:
+            buf = io.BytesIO()
+            url = (await resp.json())["url"]
+            async with sess.get(url) as image:
+                buf.write(await image.read())
+                buf.seek(0)
+            await ctx.send(
+                content=random.choice(slaps)
+                    .format(user=user.mention, author=ctx.author.mention),  # noqa
+                file=discord.File(buf, filename=url.split("/")[-1])
+            )
 
 
-@bot_bot.command()
-@in_whitelist(channels=[787396313380945941], roles=[787206476896403467], redirect=787396313380945941)
-async def list(ctx: commands.Context):
-    await send(ctx, command="list")
-
-
-@in_whitelist(channels=[787396313380945941], roles=[787206476896403467], redirect=787396313380945941)
-@bot_bot.command(name="server")
-async def _server(ctx: commands.Context):
-    svr = mcstatus.MinecraftServer.lookup(f'{IP}:{SERVER_PORT}')
-    status = svr.status()
-    e = discord.Embed()
-    e.title = f'Modded 1.12.2 Server'
-    e.description = flatten(status.description)
-    e.add_field(name="Players", value=str(status.players.online) + "/" + str(status.players.max))
-    e.add_field(name="Ping", value=str(status.latency))
-    e.add_field(name="Version", value=status.version.name)
-    e.add_field(name="Protocol", value="v" + str(status.version.protocol))
-    await ctx.send(embed=e)
-
-
-def flatten(mc_text):
-    if isinstance(mc_text, str):
-        return mc_text
-    if isinstance(mc_text, List):
-        return "".join(flatten(text for text in mc_text))
-    if isinstance(mc_text, dict):
-        if "text" not in mc_text:
-            return ""
-        return mc_text["text"]
+@slash.slash(guild_ids=[GUILD_ID])
+async def cat(ctx: SlashContext):
+    async with aiohttp.ClientSession() as sess:
+        async with sess.get("https://nekos.life/api/v2/img/meow") as resp:
+            buf = io.BytesIO()
+            url = (await resp.json())["url"]
+            async with sess.get(url) as image:
+                buf.write(await image.read())
+                buf.seek(0)
+            async with sess.get("https://nekos.life/api/v2/cat") as cat:
+                cat_str = (await cat.json())["cat"]
+            await ctx.send(
+                content=cat_str,
+                file=discord.File(buf, filename=url.split("/")[-1])
+            )
 
 
 @bot_bot.event
@@ -134,5 +125,6 @@ async def on_command_error(ctx: commands.Context, error):
     # All other Errors not returned come here... And we can just print the default TraceBack.
     print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
     traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+
 
 bot_bot.run(os.getenv("TOKEN"))
