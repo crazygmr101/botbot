@@ -18,7 +18,6 @@ bot_bot = commands.Bot(command_prefix="$", help_command=None)
 dotenv.load_dotenv()
 slash = SlashCommand(bot_bot, sync_commands=True)
 logging.basicConfig(level=logging.INFO)
-mod_commands = os.getenv("MOD_COMMANDS").split(",")
 GUILD: Optional[discord.Guild] = None
 GUILD_ID: int = 786473829190860800
 API_URL = "http://discord.com/api/v8"
