@@ -27,14 +27,14 @@ ptero_client = ptero.PteroClient(os.getenv("PTERO"), "https://panel.rawr-x3.me")
 
 
 @component.with_slash_command
-@tanjun.with_str_slash_option("server_id", "Server to get the status of",
+@tanjun.with_str_slash_option("server", "Server to get the status of",
                               choices=[(server.name, server.identifier) for server in ptero_client.servers],
                               default=None)
 @tanjun.as_slash_command("server-status", "Shows the status of the network")
-async def server_status(ctx: Context, server_id: Optional[str] = None):
-    if server_id:
+async def server_status(ctx: Context, server: Optional[str] = None):
+    if server:
         await ctx.respond(
-            str(await ptero_client.server_details(server_id))
+            str(await ptero_client.server_details(server))
         )
     else:
         await ctx.respond(

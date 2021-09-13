@@ -19,6 +19,7 @@ from typing import List
 
 import aiohttp
 import requests
+import logging
 
 from .models import PteroServerID, PteroServerResourceUsage, ResourceRange, CPUResourceRange
 
@@ -32,6 +33,7 @@ class PteroClient:
             "Content-Type": "application/json",
             "Accept": "Application/vnd.pterodactyl.v1+json"
         }
+        logging.getLogger(__name__).info("Loading server list from pterodactyl")
         # grab acceptable servers
         self.acceptable_servers = [tup[1] for tup in os.environ.items()
                                    if tup[0].startswith("SERVER_")]
@@ -43,6 +45,7 @@ class PteroClient:
                 for obj in (resp.json())["data"]
                 if obj["object"] == "server" and obj["attributes"]["uuid"] in self.acceptable_servers
             ]
+        logging.getLogger(__name__).info("Loaded server list from pterodactyl")
 
     @property
     def url(self) -> str:
