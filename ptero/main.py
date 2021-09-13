@@ -18,8 +18,10 @@ import os
 from typing import List
 
 import aiohttp
+import requests
 
 from .models import PteroServerID, PteroServerResourceUsage, ResourceRange, CPUResourceRange
+
 
 class PteroClient:
     def __init__(self, token: str, url: str):
@@ -31,29 +33,23 @@ class PteroClient:
             "Accept": "Application/vnd.pterodactyl.v1+json"
         }
         # grab acceptable servers
-        self._acceptable_servers = [tup[1] for tup in os.environ.items()
-                                    if tup[0].startswith("SERVER_")]
-        self._servers = []
+        self.acceptable_servers = [tup[1] for tup in os.environ.items()
+                                   if tup[0].startswith("SERVER_")]
+        with requests.get(f"{self.url}/api/client/",
+                          headers=self._headers) as resp:
+            self.servers = [
+                PteroServerID(obj["attributes"]["uuid"],
+                              obj["attributes"]["name"])
+                for obj in (resp.json())["data"]
+                if obj["object"] == "server" and obj["attributes"]["uuid"] in self.acceptable_servers
+            ]
 
     @property
     def url(self) -> str:
         return self._url
 
     async def clear_servers(self) -> None:
-        self._servers = []
-
-    async def servers(self) -> List[PteroServerID]:
-        if self._servers:
-            return self._servers
-        async with aiohttp.ClientSession() as sess:
-            async with sess.get(f"{self.url}/api/client/",
-                                headers=self._headers) as resp:
-                return [
-                    PteroServerID(obj["attributes"]["uuid"],
-                                  obj["attributes"]["name"])
-                    for obj in (await resp.json())["data"]
-                    if obj["object"] == "server" and obj["attributes"]["uuid"] in self._acceptable_servers
-                ]
+        self.servers = []
 
     async def server_details(self, identifier: str) -> PteroServerResourceUsage:
         async with aiohttp.ClientSession() as sess:
@@ -88,5 +84,5 @@ class PteroClient:
     async def get_all_server_details(self) -> List[PteroServerResourceUsage]:
         return [
             await self.server_details(server_identifier.identifier)
-            for server_identifier in await self.servers()
+            for server_identifier in self.servers
         ]

@@ -14,32 +14,10 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import os
-from typing import Optional
 
 import tanjun
-from tanjun.abc import Context
-
-import ptero
 
 component = tanjun.Component()
-ptero_client = ptero.PteroClient(os.getenv("PTERO"), "https://panel.rawr-x3.me")
-
-
-@component.with_slash_command
-@tanjun.with_str_slash_option("server_id", "Server to get the status of",
-                              choices=[(server.name, server.identifier) for server in ptero_client.servers],
-                              default=None)
-@tanjun.as_slash_command("server-status", "Shows the status of the network")
-async def server_status(ctx: Context, server_id: Optional[str] = None):
-    if server_id:
-        await ctx.respond(
-            str(await ptero_client.server_details(server_id))
-        )
-    else:
-        await ctx.respond(
-            "\n".join(map(str, await ptero_client.get_all_server_details()))
-        )
 
 
 @tanjun.as_loader

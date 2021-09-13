@@ -17,11 +17,8 @@ logging.basicConfig(level=logging.INFO)
 GUILD: Optional[hikari.Guild] = None
 GUILD_ID: int = 786473829190860800
 API_URL = "http://discord.com/api/v8"
-ptero_client = ptero.PteroClient(os.getenv("PTERO"), "https://panel.rawr-x3.me")
-
 
 client = tanjun.Client.from_gateway_bot(bot_bot, set_global_commands=GUILD_ID)
 client.load_modules(*Path("./modules").glob("*.py"))
-
 
 bot_bot.run()
