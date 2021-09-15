@@ -15,35 +15,22 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import os
-from typing import Optional
+from typing import Any, Optional
 
-import tanjun
-from tanjun import SlashContext
+import hikari
 
-import ptero
-
-component = tanjun.Component()
-ptero_client = ptero.PteroClient(os.getenv("PTERO"), "https://panel.rawr-x3.me")
+import yougan
+from bot.queue import BotBotPlayer
 
 
-@component.with_slash_command
-@tanjun.with_str_slash_option("server", "Server to get the status of",
-                              choices=[(server.name, server.identifier) for server in ptero_client.servers],
-                              default=None)
-@tanjun.as_slash_command("server-status", "Shows the status of the network")
-async def server_status(ctx: SlashContext, server: Optional[str] = None):
-    if server:
-        await ctx.respond(
-            str(await ptero_client.server_details(server))
-        )
-    else:
-        await ctx.respond(
-            "\n".join(map(str, await ptero_client.get_all_server_details()))
-        )
+class BotBot(hikari.GatewayBot):
+    def __init__(self, *args, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        # noinspection PyTypeChecker
+        self.lavalink_client = yougan.Client(self)
 
-
-@tanjun.as_loader
-def load_component(client: tanjun.abc.Client) -> None:
-    # This loads the component, and is necessary in EVERY module,
-    # otherwise you'll get an error.
-    client.add_component(component.copy())
+        self.lavalink_client.add_node(name="Node",
+                                      host=os.getenv("LL_IP"),
+                                      port=os.getenv("LL_PORT"),
+                                      password=os.getenv("LL_PASSWORD"))
+        self.player: Optional[BotBotPlayer] = None
