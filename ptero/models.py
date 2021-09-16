@@ -63,6 +63,13 @@ class CPUResourceRange(ResourceRange):
         else:
             return f"{self.current}%"
 
+@dataclass
+class ServerOnlineCount:
+    max: int
+    online: int
+
+    def __str__(self) -> str:
+        return f"{self.online}/{self.max}"
 
 @dataclass
 class PteroServerResourceUsage:
@@ -72,6 +79,7 @@ class PteroServerResourceUsage:
     cpu: CPUResourceRange
     disk: ResourceRange
     state: str
+    online: ServerOnlineCount
 
     @property
     def identifier(self) -> str:
@@ -97,6 +105,7 @@ class PteroServerResourceUsage:
 
     def __str__(self) -> str:
         return f"{self.emoji} **{self.name}** `{self.identifier}` {self.url}\n" \
+               f" - Online: {self.online}\n" \
                f" - Memory: {self.memory}\n" \
                f" - CPU: {self.cpu}\n" \
                f" - Disk: {self.disk}\n"

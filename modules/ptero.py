@@ -19,8 +19,10 @@ from typing import Optional
 
 import tanjun
 from tanjun import SlashContext
+import mcstatus
 
 import ptero
+from ptero.models import subdomains
 
 component = tanjun.Component()
 ptero_client = ptero.PteroClient(os.getenv("PTERO"), "https://panel.rawr-x3.me")
@@ -37,10 +39,10 @@ async def server_status(ctx: SlashContext, server: Optional[str] = None):
             str(await ptero_client.server_details(server))
         )
     else:
-        await ctx.respond(
+        await ctx.respond("<a:loading:420359325437919243> Looking up all server details - might take a bit")
+        await ctx.edit_initial_response(
             "\n".join(map(str, await ptero_client.get_all_server_details()))
         )
-
 
 @tanjun.as_loader
 def load_component(client: tanjun.abc.Client) -> None:

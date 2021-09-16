@@ -2,3 +2,4 @@ python-dotenv
 git+https://github.com/hikari-py/hikari@master#egg=hikari==2.0.0.dev101
 git+https://github.com/FasterSpeeding/Tanjun@9e681dfea5ab16b513b5dc5d297f71d9cf83b426
 requests
+mcstatus

@@ -21,7 +21,10 @@ import aiohttp
 import requests
 import logging
 
-from .models import PteroServerID, PteroServerResourceUsage, ResourceRange, CPUResourceRange
+import mcstatus
+
+from .models import PteroServerID, PteroServerResourceUsage, ResourceRange, CPUResourceRange, subdomains, \
+    ServerOnlineCount
 
 
 class PteroClient:
@@ -66,6 +69,8 @@ class PteroClient:
                 resources = json["resources"]
                 state = json["current_state"]
                 del json
+
+        mc_server = mcstatus.MinecraftServer.lookup(f"{subdomains[details['uuid'].split('-')[0]]}.rawr-x3.me").status()
         return PteroServerResourceUsage(
             details["uuid"],
             details["name"],
@@ -81,7 +86,11 @@ class PteroClient:
                 resources["disk_bytes"],
                 details["limits"]["disk"] * 1000000
             ),
-            state
+            state,
+            ServerOnlineCount(
+                mc_server.players.max,
+                mc_server.players.online
+            )
         )
 
     async def get_all_server_details(self) -> List[PteroServerResourceUsage]:
