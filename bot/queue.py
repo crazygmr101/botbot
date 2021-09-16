@@ -15,11 +15,13 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import asyncio
+import logging
 from dataclasses import dataclass
 from typing import Optional, List
 from random import randrange, shuffle
 
 import hikari
+import tanjun
 
 from yougan import Track, Player
 
@@ -36,7 +38,7 @@ class QueueTrack:
 
 
 class BotBotPlayer:
-    def __init__(self, player: Player, channel: hikari.TextableChannel):
+    def __init__(self, player: Player, channel: hikari.PartialChannel, bot: tanjun.Client):
         self.tracks: List[QueueTrack] = []
         self.now_playing: Optional[QueueTrack] = None
         self._play_task: Optional[asyncio.Task] = None
@@ -44,6 +46,15 @@ class BotBotPlayer:
         self._channel = channel
         self._paused = False
         self._lock = asyncio.Lock()
+        self._bot = bot
+        self._logger = logging.getLogger(__name__)
+
+    @property
+    def volume(self) -> int:
+        return self._player.volume
+
+    async def set_volume(self, volume: int):
+        await self._player.set_volume(volume)
 
     @property
     def paused(self):
@@ -65,6 +76,7 @@ class BotBotPlayer:
 
     async def stop(self):
         self._play_task.cancel()
+        await self._bot.shards.update_presence(activity=None)
 
     async def add(self, track: QueueTrack):
         async with self._lock:
@@ -75,12 +87,23 @@ class BotBotPlayer:
 
     async def play_loop(self):
         while True:
+            if not self.tracks:
+                await self._bot.shards.update_presence(activity=None)
+                while not self.tracks:
+                    await asyncio.sleep(0.5)
             while True:
                 if self.tracks:
                     break
                 await asyncio.sleep(0.5)
             async with self._lock:
                 self.now_playing = self.tracks.pop(0)
+                print("a")
+                activity = hikari.presences.Activity(
+                    name=self.now_playing.track.title,
+                    type=hikari.ActivityType.STREAMING,
+                    url=self.now_playing.track.uri
+                )
+                await self._bot.shards.update_presence(activity=activity)
             await self._channel.send(
                 hikari.Embed(
                     title="Playing song",
@@ -88,7 +111,7 @@ class BotBotPlayer:
                                 f"{self.now_playing.length}",
                     color=hikari.Color.from_int(0x4682b4)
                 ).set_footer(
-                    text=f"{self.now_playing.requester.username}#{self.now_playing.requester.discriminator}",
+                    text=f"{self.volume // 10} | {self.now_playing.requester.username}#{self.now_playing.requester.discriminator}",
                     icon=self.now_playing.requester.avatar_url
                 ).set_thumbnail(self.now_playing.track.thumbnail)
             )

@@ -25,8 +25,7 @@ from yougan import Client, SearchResult, Track
 
 component = tanjun.Component()
 
-group = component
-# group = component.with_slash_command(tanjun.slash_command_group("music", "music commands"))
+group = component.with_slash_command(tanjun.slash_command_group("music", "music commands"))
 queue: Optional[BotBotPlayer] = None
 
 
@@ -39,7 +38,7 @@ async def join(ctx: tanjun.SlashContext):
     client: Client = ctx.shards.lavalink_client
     await client.connect(ctx.guild_id, ctx.get_guild().get_voice_state(ctx.author).channel_id, deaf=True)
     # noinspection PyTypeChecker
-    queue = BotBotPlayer(client.get_player(ctx.guild_id), ctx.get_channel())
+    queue = BotBotPlayer(client.get_player(ctx.guild_id), ctx.get_channel(), ctx.client)
     await queue.play()
     await ctx.respond("Connected to your voice channel")
 
@@ -75,6 +74,18 @@ async def shuffle(ctx: tanjun.SlashContext):
 
 @group.with_command
 @tanjun.with_check(author_in_same_voice_channel)
+@tanjun.with_int_slash_option(
+    "level", "Volume to set to",
+    choices=[(str(x // 10), x) for x in range(10, 101, 10)]
+)
+@tanjun.as_slash_command("volume", "Set the player volume")
+async def volume(ctx: tanjun.SlashContext, level: int):
+    await queue.set_volume(level)
+    await ctx.respond(f"Set volume to {level}/10")
+
+
+@group.with_command
+@tanjun.with_check(author_in_same_voice_channel)
 @tanjun.as_slash_command("queue", "Shows the current queue")
 async def queue(ctx: tanjun.SlashContext):
     await ctx.respond(
@@ -84,7 +95,8 @@ async def queue(ctx: tanjun.SlashContext):
                         f"```{queue.now_playing.track.title[:30] :<30} {queue.now_playing.length: >5}```\n" +
                         (("Up Next:\n"
                           "```" +
-                          "\n".join(f"{track.track.title[:30] :<30} {track.length: >5}" for track in queue.tracks[:10]) +
+                          "\n".join(
+                              f"{track.track.title[:30] :<30} {track.length: >5}" for track in queue.tracks[:10]) +
                           "```") if queue.tracks else "")
         )
     )
@@ -106,7 +118,7 @@ async def play(ctx: tanjun.SlashContext, song: str):
             description=f"{first.title[:100]}\n{first.length // 60000}m{first.length // 1000 % 60:>0}s",
             color=hikari.Color.from_int(0x191970)
         ).set_footer(
-            text=f"{ctx.author.username}#{ctx.author.discriminator}",
+            text=f"{queue.volume // 10} | {ctx.author.username}#{ctx.author.discriminator}",
             icon=ctx.author.avatar_url
         ).set_thumbnail(first.thumbnail)
     )
