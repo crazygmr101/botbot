@@ -50,7 +50,7 @@ class BotBotPlayer:
         asyncio.create_task(self._deferred_init())
 
     async def _deferred_init(self):
-        self._channel = self._bot.rest.fetch_channel(self._channel.id)
+        self._channel = await self._bot.rest.fetch_channel(self._channel.id)
 
     @property
     def volume(self) -> int:
