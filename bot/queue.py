@@ -16,9 +16,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 import asyncio
 import logging
-from dataclasses import dataclass
+from random import shuffle
 from typing import Optional, List
-from random import randrange, shuffle
 
 import hikari
 import tanjun
@@ -48,6 +47,10 @@ class BotBotPlayer:
         self._lock = asyncio.Lock()
         self._bot = bot
         self._logger = logging.getLogger(__name__)
+        asyncio.create_task(self._deferred_init())
+
+    async def _deferred_init(self):
+        self._channel = self._bot.rest.fetch_channel(self._channel.id)
 
     @property
     def volume(self) -> int:
