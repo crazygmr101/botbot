@@ -7,3 +7,4 @@ hikari~=2.0.0.dev102
 aiohttp~=3.7.4.post0
 mysqlpy
 colorama
+humanize

@@ -14,19 +14,15 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from typing import Optional
+
 import hikari
-import tanjun
-
-component = tanjun.Component()
 
 
-@component.with_listener(hikari.MessageCreateEvent)
-def invite_filter(event: hikari.MessageCreateEvent):
-    pass
+class ModLogProto:
+    # noinspection PyMethodMayBeStatic
+    def create_embed(self, typ: int, description: Optional[str] = None) -> hikari.Embed:
+        raise NotImplementedError
 
-
-@tanjun.as_loader
-def load_component(client: tanjun.abc.Client) -> None:
-    # This loads the component, and is necessary in EVERY module,
-    # otherwise you'll get an error.
-    client.add_component(component.copy())
+    async def send(self, embed: hikari.Embed, *, schedule: bool = False):
+        raise NotImplementedError
