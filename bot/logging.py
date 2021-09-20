@@ -22,6 +22,7 @@ init()
 
 colors = {
     "TRACE": f"{Fore.WHITE}{Style.DIM}",
+    "TRACE_HIKARI": f"{Fore.WHITE}{Style.DIM}",
     "DEBUG": f"{Fore.LIGHTWHITE_EX}",
     "INFO": "",
     "WARNING": f"{Fore.YELLOW}{Style.BRIGHT}",
@@ -30,6 +31,7 @@ colors = {
 }
 colors2 = {
     "TRACE": f"{Fore.WHITE}{Style.DIM}",
+    "TRACE_HIKARI": f"{Fore.WHITE}{Style.DIM}",
     "DEBUG": Fore.LIGHTWHITE_EX,
     "INFO": Fore.BLUE,
     "WARNING": Fore.YELLOW,
@@ -38,6 +40,7 @@ colors2 = {
 }
 styles = {
     "TRACE": f"{Fore.WHITE}{Style.DIM}",
+    "TRACE_HIKARI": f"{Fore.WHITE}{Style.DIM}",
     "DEBUG": f"{Fore.LIGHTWHITE_EX}",
     "INFO": "",
     "WARNING": "",
