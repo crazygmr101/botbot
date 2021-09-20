@@ -25,12 +25,14 @@ import ptero
 component = tanjun.Component()
 ptero_client = ptero.PteroClient(os.getenv("PTERO"), "https://panel.rawr-x3.me")
 
+server_group = component.with_slash_command(tanjun.slash_command_group("server", "MC server commands"))
 
-@component.with_slash_command
+
+@server_group.with_command
 @tanjun.with_str_slash_option("server", "Server to get the status of",
                               choices=[(server.name, server.identifier) for server in ptero_client.servers],
                               default=None)
-@tanjun.as_slash_command("server-status", "Shows the status of the network")
+@tanjun.as_slash_command("status", "Shows the status of the network")
 async def server_status(ctx: SlashContext, server: Optional[str] = None):
     if server:
         await ctx.respond(
