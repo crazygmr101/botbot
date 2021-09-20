@@ -15,22 +15,30 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import os
-from typing import Any, Optional
+from typing import Optional
 
-import hikari
-
-import yougan
-from bot.queue import BotBotPlayer
+# noinspection PyPackageRequirements
+import mysql.connector
 
 
-class BotBot(hikari.GatewayBot):
-    def __init__(self, *args, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-        # noinspection PyTypeChecker
-        self.lavalink_client = yougan.Client(self)
+async def connect_to_database(password: str, url: str, user: str, database: str) -> mysql.connector.MySQLConnection:
+    return mysql.connector.connect(
+        user=user,
+        host=url,
+        password=password,
+        database=database
+    )
 
-        self.lavalink_client.add_node(name="main-ll",
-                                      host=os.getenv("LL_IP"),
-                                      port=os.getenv("LL_PORT"),
-                                      password=os.getenv("LL_PASSWORD"))
-        self.player: Optional[BotBotPlayer] = None
+
+class DatabaseImpl:
+    def __init__(self, connection: mysql.connector.MySQLConnection) -> None:
+        self._conn = connection
+
+    @classmethod
+    async def connect(cls):
+        conn = await connect_to_database(password=os.getenv("DB_PASSWORD"), url=os.getenv("DB_URL"),
+                                             user=os.getenv("DB_USER"), database=os.getenv("DB_DB"))
+        return cls(conn)
+
+    async def get_info(self, user_id: int) -> Optional[str]:
+        return str(user_id)

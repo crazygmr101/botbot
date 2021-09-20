@@ -14,14 +14,9 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-
-import tanjun
-
-component = tanjun.Component()
+from typing import Protocol, Optional
 
 
-@tanjun.as_loader
-def load_component(client: tanjun.abc.Client) -> None:
-    # This loads the component, and is necessary in EVERY module,
-    # otherwise you'll get an error.
-    client.add_component(component.copy())
+class DatabaseProto(Protocol):
+    async def get_info(self, user_id: int) -> Optional[str]:
+        raise NotImplementedError

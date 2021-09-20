@@ -4,16 +4,23 @@ import sys
 from pathlib import Path
 
 import dotenv
-import hikari
-import tanjun
+
+from bot.impl import DatabaseImpl
+from bot.logging import LoggingHandler
+from bot.protos import DatabaseProto
+
+logging.basicConfig(level=logging.INFO)
+logging.setLoggerClass(LoggingHandler)
+
+# have to import these after logging is configured, cuz for some fucking
+# reason, if i don't, it sets up its own logging *when imported* :SCWEEEE:
+import hikari  # noqa E402
+import tanjun  # noqa E402
+from bot.bot import BotBot  # noqa E402
 
 sys.path.append(os.path.abspath("external/hikari-yougan/"))
 
-from bot.bot import BotBot  # noqa E402
-
-logging.basicConfig(level=logging.INFO)
 dotenv.load_dotenv()
-
 import ptero  # noqa e402
 
 bot_bot = BotBot(os.getenv("TOKEN"))  # noqa
@@ -26,7 +33,12 @@ async def ready(event: hikari.StartedEvent):
 
 GUILD_ID: int = 786473829190860800
 
-client = tanjun.Client.from_gateway_bot(bot_bot, set_global_commands=GUILD_ID).add_prefix("!")
-client.load_modules(*Path("./modules").glob("*.py"))
+(
+    tanjun.Client
+        .from_gateway_bot(bot_bot, set_global_commands=GUILD_ID)
+        .set_type_dependency(DatabaseProto, tanjun.cache_callback(DatabaseImpl.connect))
+        .add_prefix("!")
+        .load_modules(*Path("./modules").glob("*.py"))
+)
 
 bot_bot.run()

@@ -14,23 +14,27 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import os
-from typing import Any, Optional
-
 import hikari
+import tanjun
 
-import yougan
-from bot.queue import BotBotPlayer
+from bot.protos import DatabaseProto
+
+component = tanjun.Component()
+
+group = component.with_slash_command(tanjun.slash_command_group("test", "test commands"))
 
 
-class BotBot(hikari.GatewayBot):
-    def __init__(self, *args, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-        # noinspection PyTypeChecker
-        self.lavalink_client = yougan.Client(self)
+@group.with_command
+@tanjun.with_user_slash_option("user", "User")
+@tanjun.as_slash_command("user", "user1")
+async def volume(ctx: tanjun.SlashContext, user: hikari.User,
+                 database: DatabaseProto = tanjun.injected(type=DatabaseProto)):
+    await ctx.respond(await database.get_info(user.id))
 
-        self.lavalink_client.add_node(name="main-ll",
-                                      host=os.getenv("LL_IP"),
-                                      port=os.getenv("LL_PORT"),
-                                      password=os.getenv("LL_PASSWORD"))
-        self.player: Optional[BotBotPlayer] = None
+
+
+@tanjun.as_loader
+def load_component(client: tanjun.abc.Client) -> None:
+    # This loads the component, and is necessary in EVERY module,
+    # otherwise you'll get an error.
+    client.add_component(component.copy())
