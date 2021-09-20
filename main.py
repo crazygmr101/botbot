@@ -46,7 +46,7 @@ GUILD_ID: int = 786473829190860800
         .set_type_dependency(DatabaseProto, tanjun.cache_callback(DatabaseImpl.connect))
         .set_type_dependency(ModLogProto, tanjun.cache_callback(create_modlog_impl))
         .add_prefix("!")
-        .load_modules(*Path("./modules").glob("*.py"))
+        .load_modules(*Path("./modules").glob("**/*.py"))
 )
 
 bot_bot.run()
