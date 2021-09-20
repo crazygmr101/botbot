@@ -14,9 +14,25 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Protocol, Optional
+from typing import Protocol, Optional, Iterable, Tuple, List
 
 
 class DatabaseProto(Protocol):
-    async def get_info(self, user_id: int) -> Optional[str]:
+    SUCCESS = 0
+    DUPLICATE = 1
+    NOT_FOUND = 2
+
+    async def get_marv(self) -> Optional[str]:
+        raise NotImplementedError
+
+    async def add_marv(self, marv: str) -> Optional[str]:
+        raise NotImplementedError
+
+    async def get_marvs(self) -> Iterable[Tuple[int, str]]:
+        raise NotImplementedError
+
+    async def get_all_marvs(self) -> List[Tuple[int, str]]:
+        raise NotImplementedError
+
+    async def delete_marv(self, marv: int) -> Tuple[int, Optional[str]]:
         raise NotImplementedError

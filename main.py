@@ -10,7 +10,7 @@ from bot.logging import LoggingHandler
 from bot.protos import DatabaseProto
 
 logging.basicConfig(level=logging.INFO)
-logging.setLoggerClass(LoggingHandler)
+#logging.setLoggerClass(LoggingHandler)
 
 # have to import these after logging is configured, cuz for some fucking
 # reason, if i don't, it sets up its own logging *when imported* :SCWEEEE:
@@ -25,7 +25,7 @@ import ptero  # noqa e402
 
 bot_bot = BotBot(os.getenv("TOKEN"),
                  intents=hikari.Intents.GUILD_MESSAGES | hikari.Intents.GUILD_INTEGRATIONS |
-                         hikari.Intents.GUILD_VOICE_STATES | hikari.Intents.GUILDS)  # noqa
+                         hikari.Intents.GUILD_VOICE_STATES | hikari.Intents.GUILDS | hikari.Intents.GUILD_MEMBERS)  # noqa
 
 
 @bot_bot.listen(hikari.StartedEvent)

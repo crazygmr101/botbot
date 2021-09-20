@@ -15,10 +15,12 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import os
-from typing import Optional
+from typing import Optional, Tuple, Iterable, List
 
 # noinspection PyPackageRequirements
 import mysql.connector
+
+from bot.protos import DatabaseProto
 
 
 async def connect_to_database(password: str, url: str, user: str, database: str) -> mysql.connector.MySQLConnection:
@@ -26,19 +28,71 @@ async def connect_to_database(password: str, url: str, user: str, database: str)
         user=user,
         host=url,
         password=password,
-        database=database
+        database=database,
     )
+
+
+class SSCursor(object):
+    pass
 
 
 class DatabaseImpl:
     def __init__(self, connection: mysql.connector.MySQLConnection) -> None:
         self._conn = connection
+        cursor = self._conn.cursor()
+        cursor.execute(
+            "CREATE TABLE IF NOT EXISTS marv ("
+            "  id int(5) NOT NULL AUTO_INCREMENT,"
+            "  link text NOT NULL,"
+            "  PRIMARY KEY (id)"
+            ")"
+        )
+        cursor.close()
 
     @classmethod
     async def connect(cls):
         conn = await connect_to_database(password=os.getenv("DB_PASSWORD"), url=os.getenv("DB_URL"),
-                                             user=os.getenv("DB_USER"), database=os.getenv("DB_DB"))
+                                         user=os.getenv("DB_USER"), database=os.getenv("DB_DB"))
         return cls(conn)
 
-    async def get_info(self, user_id: int) -> Optional[str]:
-        return str(user_id)
+    async def get_marv(self) -> Optional[str]:
+        cursor = self._conn.cursor()
+        cursor.execute("select link from marv order by rand() limit 1")
+        return cursor.fetchone()[0]
+
+    async def get_marvs(self) -> Iterable[Tuple[int, str]]:
+        cursor = self._conn.cursor(cursor_class=SSCursor)
+        cursor.execute("select * from marv order by id")
+        for row in cursor:
+            yield row
+
+    async def get_all_marvs(self) -> List[Tuple[int, str]]:
+        cursor = self._conn.cursor()
+        cursor.execute("select * from marv order by id")
+        return cursor.fetchall()
+
+    async def add_marv(self, marv: str) -> Tuple[int, int]:
+        cursor = self._conn.cursor()
+        cursor.execute("select id, link from marv where link = %s", (marv, ))
+        result = cursor.fetchone()
+        if result:
+            cursor.close()
+            return DatabaseProto.DUPLICATE, result[0]
+        cursor.execute("insert into marv (link) values (%s)", (marv, ))
+        self._conn.commit()
+        cursor.execute("select * from marv where link = %s", (marv,))
+        result = cursor.fetchone()
+        cursor.close()
+        return DatabaseProto.SUCCESS, result[0]
+
+    async def delete_marv(self, marv: int) -> Tuple[int, Optional[str]]:
+        cursor = self._conn.cursor()
+        cursor.execute("select id, link from marv where id = %s", (marv,))
+        result = cursor.fetchone()
+        if not result:
+            cursor.close()
+            return DatabaseProto.NOT_FOUND, None
+        cursor.execute("delete from marv where id = %s", (marv, ))
+        cursor.close()
+        self._conn.commit()
+        return DatabaseProto.SUCCESS, result[1]

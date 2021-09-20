@@ -14,22 +14,20 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from random import choice
 
 import hikari
 import tanjun
+
+from bot.protos import DatabaseProto
 
 component = tanjun.Component()
 
 group = component.with_slash_command(tanjun.slash_command_group("bot", "BotBot stuff"))
 
-with open("marvs.txt") as marvs_fp:
-    marvs = marvs_fp.readlines()
-
 
 @group.with_command
 @tanjun.as_slash_command("status", "Status")
-async def test_command(ctx: tanjun.SlashContext):
+async def test_command(ctx: tanjun.SlashContext, database: DatabaseProto = tanjun.injected(type=DatabaseProto)):
     marv_button_bar = ctx.rest.build_action_row() \
         .add_button(1, "show-marv").set_label("Have a marv pic :D").add_to_container()
     await ctx.respond(
@@ -40,7 +38,8 @@ async def test_command(ctx: tanjun.SlashContext):
 
 
 @component.with_listener(hikari.InteractionCreateEvent)
-async def marv_button_listener(event: hikari.InteractionCreateEvent):
+async def marv_button_listener(event: hikari.InteractionCreateEvent,
+                               database: DatabaseProto = tanjun.injected(type=DatabaseProto)):
     if event.interaction.type != hikari.InteractionType.MESSAGE_COMPONENT:
         return
     # noinspection PyTypeChecker
@@ -48,7 +47,7 @@ async def marv_button_listener(event: hikari.InteractionCreateEvent):
     if interaction.custom_id != "show-marv":
         return
     await interaction.create_initial_response(response_type=4,
-                                              embed=hikari.Embed(title="Marv").set_image(choice(marvs)),
+                                              embed=hikari.Embed(title="Marv").set_image(await database.get_marv()),
                                               flags=hikari.MessageFlag.EPHEMERAL)
 
 

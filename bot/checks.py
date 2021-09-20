@@ -14,6 +14,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+import hikari
 from tanjun import SlashContext, HaltExecution
 
 
@@ -42,5 +43,12 @@ async def author_in_same_voice_channel(ctx: SlashContext):
         raise HaltExecution
     if author_state.channel_id != bot_state.channel_id:
         await ctx.respond("You must be in the same voice channel as me to run this command")
+        raise HaltExecution
+    return True
+
+
+async def is_maddie_or_dan(ctx: SlashContext):
+    if 787131145480699917 not in [role.id for role in ctx.get_guild().get_member(ctx.author).get_roles()]:
+        await ctx.create_initial_response("You can't use this command", flags=hikari.MessageFlag.EPHEMERAL)
         raise HaltExecution
     return True
