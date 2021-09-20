@@ -23,7 +23,8 @@ sys.path.append(os.path.abspath("external/hikari-yougan/"))
 dotenv.load_dotenv()
 import ptero  # noqa e402
 
-bot_bot = BotBot(os.getenv("TOKEN"))  # noqa
+bot_bot = BotBot(os.getenv("TOKEN"),
+                 intents=hikari.Intents.GUILD_MESSAGES | hikari.Intents.GUILD_INTEGRATIONS)  # noqa
 
 
 @bot_bot.listen(hikari.StartedEvent)
