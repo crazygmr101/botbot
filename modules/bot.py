@@ -18,7 +18,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import hikari
 import tanjun
 
-from bot.protos import DatabaseProto
+from bot.protos.database import DatabaseProto
 
 component = tanjun.Component()
 

@@ -5,9 +5,8 @@ from pathlib import Path
 
 import dotenv
 
-from bot.impl import DatabaseImpl
-from bot.logging import LoggingHandler
-from bot.protos import DatabaseProto
+from bot.impl.database import DatabaseImpl
+from bot.protos.database import DatabaseProto
 
 logging.basicConfig(level=logging.INFO)
 #logging.setLoggerClass(LoggingHandler)

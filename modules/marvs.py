@@ -19,7 +19,7 @@ import hikari
 import tanjun
 
 from bot.checks import is_maddie_or_dan
-from bot.protos import DatabaseProto
+from bot.protos.database import DatabaseProto
 
 component = tanjun.Component()
 

@@ -20,7 +20,7 @@ from typing import Optional, Tuple, Iterable, List
 # noinspection PyPackageRequirements
 import mysql.connector
 
-from bot.protos import DatabaseProto
+from bot.protos.database import DatabaseProto
 
 
 async def connect_to_database(password: str, url: str, user: str, database: str) -> mysql.connector.MySQLConnection:
