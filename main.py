@@ -24,7 +24,8 @@ dotenv.load_dotenv()
 import ptero  # noqa e402
 
 bot_bot = BotBot(os.getenv("TOKEN"),
-                 intents=hikari.Intents.GUILD_MESSAGES | hikari.Intents.GUILD_INTEGRATIONS)  # noqa
+                 intents=hikari.Intents.GUILD_MESSAGES | hikari.Intents.GUILD_INTEGRATIONS |
+                         hikari.Intents.GUILD_VOICE_STATES | hikari.Intents.GUILDS)  # noqa
 
 
 @bot_bot.listen(hikari.StartedEvent)
