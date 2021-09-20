@@ -30,16 +30,13 @@ with open("marvs.txt") as marvs_fp:
 @group.with_command
 @tanjun.as_slash_command("status", "Status")
 async def test_command(ctx: tanjun.SlashContext):
-    try:
-        marv_button_bar = ctx.rest.build_action_row() \
-            .add_button(1, "show-marv").set_label("Have a marv pic :D").add_to_container()
-        await ctx.respond(
-            content=f"**BotBot status**\n"
-                    f"Users: {ctx.cache.get_guild(ctx.guild_id).member_count}",
-            component=marv_button_bar
-        )
-    except Exception as e:
-        print(e)
+    marv_button_bar = ctx.rest.build_action_row() \
+        .add_button(1, "show-marv").set_label("Have a marv pic :D").add_to_container()
+    await ctx.respond(
+        content=f"**BotBot status**\n"
+                f"Users: {ctx.cache.get_guild(ctx.guild_id).member_count}",
+        component=marv_button_bar
+    )
 
 
 @component.with_listener(hikari.InteractionCreateEvent)
