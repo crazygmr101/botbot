@@ -14,33 +14,38 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import hikari
+from typing import TypeVar, Callable, List, Optional, Union
+
+_T = TypeVar("_T")
+_S = TypeVar("_S")
 
 
-class ModLogValues:
-    started = 0
-    stopping = 1
-    message_deleted = 2
-    message_edited = 3
-    voice_change = 4
+def binary_search(lst: List[_T], search_for: _S, search_predicate: Optional[Callable[[_T], _S]] = None, low: int = None,
+                  high: int = None):
+    print(search_for)
+    print(list(map(search_predicate, lst)))
+    low = low or 0
+    high = high or len(lst) - 1
+    search_predicate = search_predicate or (lambda x: x)
+    if high >= low:
+        mid = (high + low) // 2
+        if search_predicate(lst[mid]) == search_for:
+            return mid
+        elif search_predicate(lst[mid]) > search_for:
+            return binary_search(lst, search_for, search_predicate, low, mid - 1)
+        else:
+            return binary_search(lst, search_for, search_predicate, mid + 1, high)
+    else:
+        raise ValueError
 
+
+class Null:
     @classmethod
-    def get_color(cls, typ: int) -> hikari.Color:
-        color = [
-            (0x00, 0x8f, 0x00),
-            (0x8f, 0x00, 0x00),
-            (0xff, 0x55, 0x55),
-            (0x55, 0xff, 0x55),
-            (0xff, 0xff, 0x55)
-        ][typ]
-        return hikari.Color.from_rgb(color[0], color[1], color[2])
+    def safe(cls, var: _T) -> Union["Null", _T]:
+        return var or cls()
 
-    @classmethod
-    def get_title(cls, typ: int) -> str:
-        return [
-            ":small_red_triangle: BotBot started",
-            ":small_red_triangle_down: BotBot stopping",
-            ":wastebasket: Message deleted",
-            ":pencil2: Message edited",
-            ":speaker: Voice state changed"
-        ][typ]
+    def __call__(self, *args, **kwargs):
+        return
+
+    def __getattr__(self, item):
+        return self.__class__()

@@ -15,14 +15,14 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import re
-from datetime import datetime
 
 import hikari
-import humanize
 import tanjun
 
+from bot.protos.cache import BotBotCacheProto
 from bot.protos.modlog import ModLogProto
 from bot.utils import ModLogValues
+from bot.utils.misc import Null
 
 DISCORD_INVITE = re.compile(r"(https?://)?(www\.|canary\.|ptb\.)?discord(\.gg|(app)?\.com/invite|\.me)/([^ ]{4,10})/?")
 
@@ -38,19 +38,91 @@ async def invite_filter(event: hikari.MessageCreateEvent):
         pass
 
 
-startup = datetime.now()
-
-
-@component.with_listener(hikari.StartedEvent)
-async def log_startup(event: hikari.StartedEvent, modlog: ModLogProto = tanjun.injected(type=ModLogProto)):
-    await modlog.send(modlog.create_embed(ModLogValues.started,
-                                          description=f"Startup completed in "
-                                                      f"{humanize.naturaldelta(datetime.now() - startup)}"))
-
-
 @component.with_listener(hikari.StoppingEvent)
 async def log_stopping(event: hikari.StoppingEvent, modlog: ModLogProto = tanjun.injected(type=ModLogProto)):
     await modlog.send(modlog.create_embed(ModLogValues.stopping))
+
+
+@component.with_listener(hikari.MessageDeleteEvent)
+async def log_message_deletion(event: hikari.MessageDeleteEvent,
+                               modlog: ModLogProto = tanjun.injected(type=ModLogProto),
+                               cache: BotBotCacheProto = tanjun.injected(type=BotBotCacheProto)):
+    try:
+        original_message = await cache.get_message(event.channel_id, event.message_id)
+    except ValueError:
+        return
+    await modlog.send(
+        modlog.create_embed(ModLogValues.message_deleted).add_field(
+            "Message", (original_message.content[:600] if original_message.content else "-"), inline=False
+        ).add_field(
+            "Author", f"{original_message.author.username}#{original_message.author.discriminator} "
+                      f"({original_message.author.id})", inline=True
+        ).add_field(
+            "Sent at", f"<t:{int(original_message.created_at.timestamp())}>", inline=True
+        ).add_field(
+            "Sent in", f"<#{original_message.channel_id}>"
+        )
+    )
+
+
+@component.with_listener(hikari.MessageUpdateEvent)
+async def log_message_edit(event: hikari.MessageUpdateEvent,
+                           modlog: ModLogProto = tanjun.injected(type=ModLogProto),
+                           cache: BotBotCacheProto = tanjun.injected(type=BotBotCacheProto)):
+    if event.message.author.is_bot:
+        return
+    try:
+        original_message = await cache.get_message(event.channel_id, event.message_id)
+    except ValueError:
+        return
+    current_message = event.message
+    await modlog.send(
+        modlog.create_embed(
+            ModLogValues.message_edited,
+            description=f"[Jump to message](https://discord.com/channels/"
+                        f"{original_message.guild_id}/{original_message.channel_id}/{original_message.id})"
+        ).add_field(
+            "Old Content", original_message.content[:300], inline=False
+        ).add_field(
+            "New Content", current_message.content[:300], inline=False
+        ).add_field(
+            "Author", f"{original_message.author.username}#{original_message.author.discriminator} "
+                      f"({original_message.author.id})", inline=True
+        ).add_field(
+            "Sent at", f"<t:{int(original_message.created_at.timestamp())}>", inline=True
+        ).add_field(
+            "Sent in", f"<#{original_message.channel_id}>"
+        )
+    )
+
+
+@component.with_listener(hikari.VoiceStateUpdateEvent)
+async def log_voice_change(event: hikari.VoiceStateUpdateEvent,
+                           modlog: ModLogProto = tanjun.injected(type=ModLogProto)):
+    if Null.safe(event.old_state).channel_id == event.state.channel_id:
+        # user just deafened, muted, etc - not logging those
+        return
+    member = event.old_state.member if event.old_state else event.state.member
+    old_channel = await event.app.rest.fetch_channel(event.old_state.channel_id) if \
+        (event.old_state and event.old_state.channel_id) else None
+    channel = await event.app.rest.fetch_channel(event.state.channel_id) if event.state.channel_id else None
+    if not old_channel:  # joining voice
+        description = f"Joined {channel.name}"
+    elif not channel:
+        description = f"Left {old_channel.name}"
+    else:
+        description = f"Moved from {old_channel.name} to {channel.name}"
+    await modlog.send(modlog.create_embed(ModLogValues.voice_change).add_field(
+        "Member", f"{member.username}#{member.discriminator} ({member.id})"
+    ).add_field(
+        "Change", description
+    ))
+
+
+@component.with_listener(hikari.MessageCreateEvent)
+async def add_message_to_cache(event: hikari.MessageCreateEvent,
+                               cache: BotBotCacheProto = tanjun.injected(type=BotBotCacheProto)):
+    await cache.add_message(event.message)
 
 
 @tanjun.as_loader

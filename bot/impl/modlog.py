@@ -31,6 +31,8 @@ class ModLogImpl:
         asyncio.get_event_loop().create_task(self.__deferred_init())
 
     async def __deferred_init(self):
+        while not self._bot.is_alive:
+            await asyncio.sleep(0.1)
         self._mod_log_channel = await self._bot.rest.fetch_channel(self._channel_id)
 
     # noinspection PyMethodMayBeStatic

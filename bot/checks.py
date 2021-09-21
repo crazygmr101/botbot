@@ -47,7 +47,7 @@ async def author_in_same_voice_channel(ctx: SlashContext):
     return True
 
 
-async def is_maddie_or_dan(ctx: SlashContext):
+async def is_maddie_or_impostor_with_maddie_role(ctx: SlashContext):
     if 787131145480699917 not in [role.id for role in ctx.get_guild().get_member(ctx.author).get_roles()]:
         await ctx.create_initial_response("You can't use this command", flags=hikari.MessageFlag.EPHEMERAL)
         raise HaltExecution

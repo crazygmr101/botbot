@@ -18,7 +18,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import hikari
 import tanjun
 
-from bot.checks import is_maddie_or_dan
+from bot.checks import is_maddie_or_impostor_with_maddie_role
 from bot.protos.database import DatabaseProto
 
 component = tanjun.Component()
@@ -27,7 +27,7 @@ group = component.with_slash_command(tanjun.slash_command_group("marv", "Marv st
 
 
 @group.with_command
-@tanjun.with_check(is_maddie_or_dan)
+@tanjun.with_check(is_maddie_or_impostor_with_maddie_role)
 @tanjun.with_str_slash_option("marv", "Marv URL")
 @tanjun.as_slash_command("add", "add a marv", default_to_ephemeral=True)
 async def add_marv(ctx: tanjun.SlashContext, marv: str, database: DatabaseProto = tanjun.injected(type=DatabaseProto)):
@@ -45,7 +45,7 @@ async def show_marv(ctx: tanjun.SlashContext, database: DatabaseProto = tanjun.i
 
 
 @group.with_command
-@tanjun.with_check(is_maddie_or_dan)
+@tanjun.with_check(is_maddie_or_impostor_with_maddie_role)
 @tanjun.with_int_slash_option("page", "Page to get")
 @tanjun.as_slash_command("list", "list the marvs", default_to_ephemeral=True)
 async def list_marvs(ctx: tanjun.SlashContext, page: int,
@@ -60,7 +60,7 @@ async def list_marvs(ctx: tanjun.SlashContext, page: int,
                               "\n\n".join(f"Marv {n}:\n<{marv}>" for n, marv in pages[page-1]))
 
 @group.with_command
-@tanjun.with_check(is_maddie_or_dan)
+@tanjun.with_check(is_maddie_or_impostor_with_maddie_role)
 @tanjun.with_int_slash_option("marv", "Marv to delete")
 @tanjun.as_slash_command("delete", "remove a marv", default_to_ephemeral=True)
 async def list_marvs(ctx: tanjun.SlashContext, marv: int,

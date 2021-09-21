@@ -14,33 +14,17 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from typing import Protocol
+
 import hikari
 
 
-class ModLogValues:
-    started = 0
-    stopping = 1
-    message_deleted = 2
-    message_edited = 3
-    voice_change = 4
+class BotBotCacheProto(Protocol):
+    async def add_message(self, message: hikari.Message):
+        raise NotImplementedError
 
-    @classmethod
-    def get_color(cls, typ: int) -> hikari.Color:
-        color = [
-            (0x00, 0x8f, 0x00),
-            (0x8f, 0x00, 0x00),
-            (0xff, 0x55, 0x55),
-            (0x55, 0xff, 0x55),
-            (0xff, 0xff, 0x55)
-        ][typ]
-        return hikari.Color.from_rgb(color[0], color[1], color[2])
+    async def populate(self):
+        raise NotImplementedError
 
-    @classmethod
-    def get_title(cls, typ: int) -> str:
-        return [
-            ":small_red_triangle: BotBot started",
-            ":small_red_triangle_down: BotBot stopping",
-            ":wastebasket: Message deleted",
-            ":pencil2: Message edited",
-            ":speaker: Voice state changed"
-        ][typ]
+    async def get_message(self, channel_id: int, message_id: int) -> hikari.Message:
+        raise NotImplementedError
