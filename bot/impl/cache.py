@@ -36,7 +36,7 @@ class BotBotCacheImpl:
         for snowflake, channel in guild.get_channels().items():
             if not isinstance(channel, hikari.TextableGuildChannel):
                 continue
-            self._logger.info(f"Caching channel {channel.name} ({channel.id})")
+            # self._logger.info(f"Caching channel {channel.name} ({channel.id})")
             self._cache[channel.id] = []
             self._cache_locks[channel.id] = asyncio.Lock()
             if not fetch_messages:

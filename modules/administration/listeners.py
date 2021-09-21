@@ -102,6 +102,7 @@ async def log_voice_change(event: hikari.VoiceStateUpdateEvent,
     if Null.safe(event.old_state).channel_id == event.state.channel_id:
         # user just deafened, muted, etc - not logging those
         return
+    event.app.cache
     member = event.old_state.member if event.old_state else event.state.member
     old_channel = await event.app.rest.fetch_channel(event.old_state.channel_id) if \
         (event.old_state and event.old_state.channel_id) else None

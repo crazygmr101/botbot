@@ -11,7 +11,7 @@ import humanize
 from bot.logging import LoggingHandler
 
 logging.basicConfig(level=logging.INFO)
-# logging.setLoggerClass(LoggingHandler)
+logging.setLoggerClass(LoggingHandler)
 
 # have to import these after logging is configured, cuz for some fucking
 # reason, if i don't, it sets up its own logging *when imported* :SCWEEEE:
