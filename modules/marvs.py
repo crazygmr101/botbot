@@ -57,7 +57,8 @@ async def list_marvs(ctx: tanjun.SlashContext, page: int,
         return ctx.respond(f"That's an invalid page, there {'are' if len(pages) > 1 else 'is'} {len(pages)} "
                            f"page{'s' if len(pages) > 1 else ''}")
     await ctx.respond(content=f"**Marv page {page}**\n" +
-                              "\n\n".join(f"Marv {n}:\n<{marv}>" for n, marv in pages[page-1]))
+                              "\n\n".join(f"Marv {n}:\n<{marv}>" for n, marv in pages[page - 1]))
+
 
 @group.with_command
 @tanjun.with_check(is_maddie_or_impostor_with_maddie_role)
@@ -70,6 +71,7 @@ async def list_marvs(ctx: tanjun.SlashContext, marv: int,
         await ctx.respond("That marv wasn't found - do /marv list to see marvs")
     else:
         await ctx.respond(f"Marv <{deleted}> deleted")
+
 
 @tanjun.as_loader
 def load_component(client: tanjun.abc.Client) -> None:
