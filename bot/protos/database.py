@@ -14,13 +14,24 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Protocol, Optional, Iterable, Tuple, List
+from typing import Protocol, Optional, Iterable, Tuple, List, AsyncGenerator
+
+import hikari
 
 
 class DatabaseProto(Protocol):
     SUCCESS = 0
     DUPLICATE = 1
     NOT_FOUND = 2
+
+    async def get_roles(self) -> List[hikari.Snowflake]:
+        raise NotImplementedError
+
+    async def add_role(self, role: hikari.Snowflake) -> int:
+        raise NotImplementedError
+
+    async def remove_role(self, role: hikari.Snowflake) -> int:
+        raise NotImplementedError
 
     async def get_marv(self) -> Optional[str]:
         raise NotImplementedError

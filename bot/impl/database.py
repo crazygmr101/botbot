@@ -15,9 +15,10 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import os
-from typing import Optional, Tuple, Iterable, List
+from typing import Optional, Tuple, Iterable, List, AsyncGenerator
 
 # noinspection PyPackageRequirements
+import hikari
 import mysql.connector
 
 from bot.protos.database import DatabaseProto
@@ -47,13 +48,42 @@ class DatabaseImpl:
             "  PRIMARY KEY (id)"
             ")"
         )
+        cursor.execute(
+            "CREATE TABLE IF NOT EXISTS roles ("
+            "  id tinytext NOT NULL"
+            ")"
+        )
         cursor.close()
+        connection.commit()
 
     @classmethod
     async def connect(cls):
         conn = await connect_to_database(password=os.getenv("DB_PASSWORD"), url=os.getenv("DB_URL"),
                                          user=os.getenv("DB_USER"), database=os.getenv("DB_DB"))
         return cls(conn)
+
+    async def get_roles(self) -> List[hikari.Snowflake]:
+        cursor = self._conn.cursor()
+        cursor.execute("select * from roles")
+        return [hikari.Snowflake(int(row[0])) for row in cursor.fetchall()]
+
+    async def add_role(self, role: hikari.Snowflake) -> int:
+        cursor = self._conn.cursor()
+        cursor.execute("select * from roles where id=%s", (str(int(role)),))
+        if cursor.fetchone():
+            return DatabaseProto.DUPLICATE
+        cursor.execute("insert into roles (id) values (%s) ", (str(int(role)),))
+        self._conn.commit()
+        return DatabaseProto.SUCCESS
+
+    async def remove_role(self, role: hikari.Snowflake) -> int:
+        cursor = self._conn.cursor()
+        cursor.execute("select * from roles where id=%s", (str(int(role)),))
+        if not cursor.fetchone():
+            return DatabaseProto.NOT_FOUND
+        cursor.execute("delete from roles where id=%s", (str(int(role)),))
+        self._conn.commit()
+        return DatabaseProto.SUCCESS
 
     async def get_marv(self) -> Optional[str]:
         cursor = self._conn.cursor()
@@ -73,12 +103,12 @@ class DatabaseImpl:
 
     async def add_marv(self, marv: str) -> Tuple[int, int]:
         cursor = self._conn.cursor()
-        cursor.execute("select id, link from marv where link = %s", (marv, ))
+        cursor.execute("select id, link from marv where link = %s", (marv,))
         result = cursor.fetchone()
         if result:
             cursor.close()
             return DatabaseProto.DUPLICATE, result[0]
-        cursor.execute("insert into marv (link) values (%s)", (marv, ))
+        cursor.execute("insert into marv (link) values (%s)", (marv,))
         self._conn.commit()
         cursor.execute("select * from marv where link = %s", (marv,))
         result = cursor.fetchone()
@@ -92,7 +122,7 @@ class DatabaseImpl:
         if not result:
             cursor.close()
             return DatabaseProto.NOT_FOUND, None
-        cursor.execute("delete from marv where id = %s", (marv, ))
+        cursor.execute("delete from marv where id = %s", (marv,))
         cursor.close()
         self._conn.commit()
         return DatabaseProto.SUCCESS, result[1]

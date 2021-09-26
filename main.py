@@ -8,10 +8,12 @@ import dotenv
 import humanize
 
 # noinspection PyUnresolvedReferences
+from yuyo import ComponentClient
+
 from bot.logging import LoggingHandler
 
 logging.basicConfig(level=logging.INFO)
-logging.setLoggerClass(LoggingHandler)
+#logging.setLoggerClass(LoggingHandler)
 
 # have to import these after logging is configured, cuz for some fucking
 # reason, if i don't, it sets up its own logging *when imported* :SCWEEEE:
@@ -27,16 +29,18 @@ import tanjun  # noqa E402
 from bot.bot import BotBot  # noqa E402
 
 sys.path.append(os.path.abspath("external/hikari-yougan/"))
+sys.path.append(os.path.abspath("external/yuyo/"))
 
 dotenv.load_dotenv()
 import ptero  # noqa e402
 
 bot_bot = BotBot(os.getenv("TOKEN"),
-                 intents=hikari.Intents.GUILD_MESSAGES | hikari.Intents.GUILD_INTEGRATIONS |
-                         hikari.Intents.GUILD_VOICE_STATES | hikari.Intents.GUILDS | hikari.Intents.GUILD_MEMBERS)  # noqa
+                 intents=hikari.Intents.ALL_GUILDS_UNPRIVILEGED)  # noqa
 
 cache = BotBotCacheImpl(bot_bot, 100)
 modlog = ModLogImpl(bot_bot)
+client = ComponentClient.from_gateway_bot(bot_bot)
+client.open()
 
 startup = datetime.now()
 
@@ -57,6 +61,8 @@ def create_modlog_impl():
 def create_cache_impl():
     return cache
 
+def create_component_client():
+    return client
 
 GUILD_ID: int = 786473829190860800
 
@@ -66,6 +72,7 @@ GUILD_ID: int = 786473829190860800
         .set_type_dependency(DatabaseProto, tanjun.cache_callback(DatabaseImpl.connect))
         .set_type_dependency(ModLogProto, tanjun.cache_callback(create_modlog_impl))
         .set_type_dependency(BotBotCacheProto, tanjun.cache_callback(create_cache_impl))
+        .set_type_dependency(ComponentClient, tanjun.cache_callback(create_component_client))
         .add_prefix("!")
         .load_modules(*Path("./modules").glob("**/*.py"))
 )

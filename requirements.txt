@@ -1,6 +1,7 @@
 python-dotenv~=0.19.0
 git+https://github.com/hikari-py/hikari@master#egg=hikari==2.0.0.dev101
 git+https://github.com/FasterSpeeding/Tanjun@8ca8deacd3a72f84f2c3308876fe31018d9154e0
+git+https://github.com/FasterSpeeding/Yuyo@53489edc31d6e5772cb520f79dd35a166a1c764e
 requests~=2.26.0
 mcstatus~=6.5.0
 hikari~=2.0.0.dev102
