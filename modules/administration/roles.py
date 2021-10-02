@@ -38,8 +38,8 @@ class RoleExecutor(MultiComponentExecutor):
     ) -> None:
         if interaction.message.id != self.initial_id:
             return
-        role_ids = set(int(value.split("-")[1]) for value in interaction.values)
-        current_role_ids = set(map(int, interaction.member.role_ids))
+        role_ids = [int(value.split("-")[1]) for value in interaction.values]
+        current_role_ids = [int(role_id) for role_id in interaction.member.role_ids]
         for role in self._roles:
             if role in role_ids and role not in current_role_ids:
                 await interaction.member.add_role(role)
